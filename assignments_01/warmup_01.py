@@ -300,7 +300,7 @@ except ValidationError as e:
 # Q1
 def celsius_to_fahrenheit(celsius: float) -> float:
     """Convert a temperature from Celsius to Fahrenheit."""
-    return celsius * 9 / 4 + 32
+    return celsius * 9 / 5 + 32
 
 
 def test_celsius_to_fahrenheit():
