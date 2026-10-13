@@ -55,7 +55,6 @@ plt.title("Daily High vs Low")
 plt.xlabel("Low temperature")
 plt.ylabel("High temperature")
 
-# save next to this script so it always lands in assignments_02/outputs/
 out_path = Path(__file__).parent / "outputs" / "high_vs_low.png"
 plt.savefig(out_path)
 plt.close()
