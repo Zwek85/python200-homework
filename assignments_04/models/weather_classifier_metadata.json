@@ -1,0 +1,15 @@
+{
+  "python_version": "3.13.5",
+  "sklearn_version": "1.9.1",
+  "feature_names": [
+    "temperature_2m_max",
+    "temperature_2m_min",
+    "precipitation_sum",
+    "wind_speed_10m_max"
+  ],
+  "label_rule": "good_for_running = 1 when temperature_2m_max is between 7 and 26 C, temperature_2m_min >= 0 C, precipitation_sum < 3 mm, and wind_speed_10m_max < 30 km/h; otherwise 0",
+  "city": "Portland, Oregon",
+  "model_type": "KNeighborsClassifier (k=7) in a StandardScaler pipeline",
+  "test_accuracy": 0.9589,
+  "test_f1": 0.9492
+}
