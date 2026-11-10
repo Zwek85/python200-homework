@@ -57,8 +57,26 @@ for question in questions:
     print(f"  Chunk preview: {top_node.node.get_content()[:200]}")
 
 # Reflection on Step 4:
-# [Write this from your own output: did the answers sound confident and
-# accurate? Did any surprise you, for example the loyalty program question?]
+# The assistant sounded confident, and the answers I checked were accurate and
+# well grounded. The founding story answer (Maya Torres and Sam Okafor, 2018,
+# Asheville) came from our_story.txt with a high similarity score of 0.77, and
+# the catering and wholesale answer (events of 20 or more, wholesale orders of
+# 5 pounds or more) came from wholesale_catering.txt at 0.63. Both top sources
+# were the right documents.
+#
+# The loyalty program question surprised me. The answer was correct and
+# specific (one point per dollar, 100 points for a free drink, sign up at the
+# register or on the website), but the top source was faq.txt with a low score
+# of only 0.30, and the chunk preview started with the hours section. I think
+# the FAQ chunk covers many unrelated topics (hours, locations, loyalty), so
+# its embedding is a blend of all of them and matches any single question less
+# strongly. The score was low even though retrieval worked, so a low similarity
+# score does not always mean a bad answer, and a high one is not required for a
+# correct one. This also means I can't judge answer quality from the score
+# alone; I need to read the retrieved text.
+#
+# Overall, the assistant is reliable when the documents contain the answer, and
+# the sources shown make it possible to verify each claim.
 
 # --- Step 5: Find a failure ---
 failure_question = "Do you have a drive-through, and can I order ahead on your mobile app?"

@@ -217,7 +217,8 @@ Settings.embed_model = OpenAIEmbedding(model="text-embedding-3-small")
 Settings.llm = OpenAI(model="gpt-4o-mini")
 
 # Adjust this path to match where brightleaf_pdfs/ lives on your computer.
-PDF_DIR = Path.home() / "Documents" / "python-200-v1" / "lessons" / "06_AI_augmentation" / "resources" / "brightleaf_pdfs"
+PDF_DIR = Path.home() / "python-200-v1" / "lessons" / "06_AI_augmentation" / "resources" / "brightleaf_pdfs"
+assert PDF_DIR.exists(), f"PDF directory not found: {PDF_DIR}"
 
 pdf_documents = SimpleDirectoryReader(PDF_DIR).load_data()
 index = VectorStoreIndex.from_documents(pdf_documents)
@@ -242,15 +243,24 @@ for question in questions:
     response = query_engine.query(question)
     show_result(question, response)
 
-# LlamaIndex Q1 observations (TODO: fill in after running, one note per query):
-# Query 1 (employee benefits):
-#   - Relevant chunks?
-#   - Tone (confident and specific, or hedging)?
-#   - Anything unexpected retrieved?
-# Query 2 (security policies):
-#   - Relevant chunks?
-#   - Tone (confident and specific, or hedging)?
-#   - Anything unexpected retrieved?
+# LlamaIndex Q1 observations:
+# Query 1 (employee benefits): Only the top chunk was relevant. Source 1
+#   (score 0.76) was the benefits policy. Sources 2 and 3 (0.59 and 0.56)
+#   were about the EcoVolt partnership and the company overview, which have
+#   nothing to do with benefits. The tone was confident and specific: the
+#   answer named Blue Cross, the 401(k) match up to five percent, twelve weeks
+#   of paid parental leave, and the learning stipend, all of which are in
+#   Source 1. The two unrelated chunks were retrieved only because top_k=3
+#   forces three results, and the model ignored them.
+# Query 2 (security policies): Source 1 (0.67) was the Network and Data
+#   Security chunk, which is the right one. Source 2 (0.62) was the benefits
+#   introduction and Source 3 (0.59) was the EcoVolt chunk, both irrelevant.
+#   The tone was again confident and detailed (MFA, TLS 1.3 and AES-256
+#   encryption, NIST 800-61 incident response, ISO 27001). What surprised me
+#   was that the benefits chunk ranked above other chunks for a security
+#   question, which shows that similarity scores rank chunks but don't
+#   guarantee relevance. The answer was still good because the one correct
+#   chunk contained most of what was needed.
 
 # LlamaIndex Q2
 q2 = questions[0]
@@ -259,15 +269,22 @@ for k in (1, 5):
     engine_k = index.as_query_engine(similarity_top_k=k)
     show_result(q2, engine_k.query(q2))
 
-# LlamaIndex Q2 observations (TODO: fill in after running):
-#   - How did the response change between top_k=1 and top_k=5?
-#   - Is more retrieved context always better? (Think about: a larger k can add
-#     missing details, but it can also add less relevant chunks that dilute or
-#     distract from the answer, and it increases prompt size and cost.)
+# LlamaIndex Q2 observations:
+# With top_k=1 the model retrieved only the benefits chunk (0.76) and still
+# gave a complete answer covering health, financial, parental leave, flexibility,
+# and career growth, though with fewer specifics. With top_k=5 the answer
+# included more detail (the $600 wellness reimbursement, disability insurance
+# at no cost, quarterly financial seminars), but sources 2 through 5 (scores
+# 0.59, 0.56, 0.47, 0.44) were the EcoVolt partnership, the company overview,
+# the financial report, and a HelioPanel X5 product page, none of which relate
+# to benefits. So the extra detail came from the same benefits chunk, not from
+# the added chunks, which means the extra context added no new information.
+# More context is not always better: here it only added noise, increased the
+# prompt size and cost, and risked distracting the model. A larger k helps when
+# the answer is spread across several chunks, not when one chunk already has it.
 
-# LlamaIndex Q3
-# Edit this query if you want to try a different kind of hard question.
-q3 = "How does BrightLeaf's remote work policy compare to its travel expense rules?"
+# LlamaIndex Q3# 
+# = "How does BrightLeaf's remote work policy compare to its travel expense rules?"
 
 print("\n=== LlamaIndex Q3 ===")
 response_q3 = query_engine.query(q3)
@@ -277,12 +294,23 @@ for i, node in enumerate(response_q3.source_nodes, start=1):
     print(f"\n--- Chunk {i} (score={node.score:.4f}) ---")
     print(node.node.get_content())
 
-# LlamaIndex Q3 observations (TODO: fill in after running):
-#   - What I expected:
-#   - What actually happened:
-#   - What I would change (e.g. smaller or larger chunks, higher top_k, query
-#     rewriting, metadata filters, a reranker, or telling the model to say
-#     "I don't know" when the context doesn't contain the answer):
+# LlamaIndex Q3 observations:
+# What I expected: This question needs two topics, remote work and travel
+# expense rules, so I expected retrieval to struggle because one chunk might
+# cover only one topic, and the model might either guess or give a partial answer.
+# What actually happened: The top chunks were the benefits policy (0.57), the
+# EcoVolt partnership (0.45), and the company overview (0.45), with lower scores
+# than in Q1 (0.76). None contained travel expense rules. The model answered
+# only the part it could support, saying the documents don't include travel
+# expense rules, mentioning the hybrid and flexible scheduling in the benefits
+# chunk, and stating that a direct comparison could not be made. It did not
+# invent a travel policy, which is the right behavior.
+# What I would change: First check whether the PDFs even contain a travel
+# expense policy. If not, the system should be told to say "I don't know" when
+# the context lacks the answer, and a similarity cutoff would stop it from
+# retrieving unrelated chunks. If they do, I would split the question into two
+# sub-queries (remote work, travel expenses), retrieve for each separately, and
+# combine the results, since one query embedding cannot match two topics well.
 
 # LlamaIndex Q4
 judge_llm = OpenAI(model="gpt-4o-mini")
@@ -307,22 +335,15 @@ evaluate(q)
 # A question that is clearly not covered by the Brightleaf documents.
 evaluate("What is the best recipe for chocolate chip cookies?")
 
-# LlamaIndex Q4 answers:
-# 1. A faithfulness score of 1.0 means every claim in the response is supported
-#    by the retrieved context. A score of 0.0 means the response contains
-#    information that the retrieved chunks do not support, i.e. it was made up.
-# 2. Relevancy measures whether the response (and retrieved context) actually
-#    answers the question that was asked. Faithfulness checks the answer
-#    against the sources; relevancy checks the answer against the question. A
-#    response can be faithful but irrelevant, or relevant but unfaithful.
-# 3. Yes, the scores changed. For the benefits question, faithfulness and
-#    relevancy were both 1.0 [use your numbers]: the retrieved chunks contained
-#    the answer and the model stuck to them. For the cookie question,
-#    [faithfulness / relevancy] dropped to 0.0 because [the retrieved chunks
-#    had nothing about cookies, so the model either said it couldn't answer or
-#    made something up]. This shows the two metrics catch different failures.
-# 4. LLM-as-a-judge means using a second LLM to grade the output of the first,
-#    following a rubric (for example, "is every claim supported by this
-#    context?"). It is used for RAG because answers are free-form text, so there
-#    is no single correct string to compare against, and a simple accuracy
-#    metric can't tell whether a differently worded answer is still correct.
+# 3. Yes, the scores changed. For the benefits question, faithfulness was 1.0
+#    and relevancy was 1.0 (both passing): the retrieved chunk contained the
+#    answer and the model stuck to it. For the cookie question, both
+#    faithfulness and relevancy dropped to 0.0 (not passing). The retrieved
+#    chunks had nothing about cookies, so the model declined instead of making
+#    something up, which is the right behavior. Relevancy was 0.0 because
+#    neither the context nor the response answered the question. Faithfulness
+#    was also 0.0 because the judge found nothing in the context supporting
+#    the response, so a 0.0 does not always mean the model fabricated. In this
+#    case both metrics failed together because the question was off-topic, but
+#    in other cases they can diverge, since one checks the answer against the
+#    sources and the other checks it against the question.
