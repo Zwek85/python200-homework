@@ -283,8 +283,9 @@ for k in (1, 5):
 # prompt size and cost, and risked distracting the model. A larger k helps when
 # the answer is spread across several chunks, not when one chunk already has it.
 
-# LlamaIndex Q3# 
-# = "How does BrightLeaf's remote work policy compare to its travel expense rules?"
+# LlamaIndex Q3
+# Edit this query if you want to try a different kind of hard question.
+q3 = "How does BrightLeaf's remote work policy compare to its travel expense rules?"
 
 print("\n=== LlamaIndex Q3 ===")
 response_q3 = query_engine.query(q3)
@@ -335,6 +336,16 @@ evaluate(q)
 # A question that is clearly not covered by the Brightleaf documents.
 evaluate("What is the best recipe for chocolate chip cookies?")
 
+# LlamaIndex Q4 answers:
+# 1. A faithfulness score of 1.0 means every claim in the response is supported
+#    by the retrieved context. A score of 0.0 means the response contains
+#    information that the retrieved chunks do not support.
+#
+# 2. Relevancy measures whether the response (and retrieved context) actually
+#    answers the question that was asked. Faithfulness checks the answer
+#    against the sources; relevancy checks the answer against the question. A
+#    response can be faithful but irrelevant, or relevant but unfaithful.
+#
 # 3. Yes, the scores changed. For the benefits question, faithfulness was 1.0
 #    and relevancy was 1.0 (both passing): the retrieved chunk contained the
 #    answer and the model stuck to it. For the cookie question, both
@@ -343,7 +354,17 @@ evaluate("What is the best recipe for chocolate chip cookies?")
 #    something up, which is the right behavior. Relevancy was 0.0 because
 #    neither the context nor the response answered the question. Faithfulness
 #    was also 0.0 because the judge found nothing in the context supporting
-#    the response, so a 0.0 does not always mean the model fabricated. In this
-#    case both metrics failed together because the question was off-topic, but
-#    in other cases they can diverge, since one checks the answer against the
-#    sources and the other checks it against the question.
+#    the response, so a 0.0 does not always mean the model fabricated. This
+#    shows the two metrics measure different things and can fail together
+#    when a question is off-topic.
+#
+# 4. LLM-as-a-judge means using a second LLM to grade the output of the first,
+#    following a rubric (for example, "is every claim in this response
+#    supported by this context?"). It is used for RAG evaluation instead of a
+#    simple accuracy metric because RAG answers are free-form text, so there is
+#    no single correct string to compare against. The same correct answer can
+#    be worded many ways, and an exact-match or keyword accuracy score would mark
+#    a good paraphrase as wrong. A judge LLM can read the answer, the question,
+#    and the retrieved context and decide whether the answer is supported and
+#    on-topic. The tradeoff is that the judge is itself an LLM, so its scores
+#    can be imperfect and should be spot-checked.
