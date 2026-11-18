@@ -184,17 +184,22 @@ if __name__ == "__main__":
         response = agent.run(query, reset=False)
         print(response)
 
-    # Task 4: your own questions (edit these if you like)
-    my_query_1 = "Which 3 countries had the highest average happiness_score across all years?"
+       my_query_1 = "Which 3 countries had the highest average happiness_score across all years?"
     response_1 = agent.run(my_query_1, reset=False)
     print(response_1)
-    # Comment: (fill in after running) tool use, code generation, or both?
+    # Comment: Code generation only. No tool was called. get_top_n_countries ranks
+    # countries for a single year, so it can't average across all years. The agent wrote
+    # its own pandas code, data.groupby('country')['happiness_score'].mean().nlargest(3),
+    # and returned Finland (7.67), Denmark (7.58), and Iceland (7.52).
 
     my_query_2 = ("Which region's average happiness_score increased the most "
                   "from 2015 to 2024?")
     response_2 = agent.run(my_query_2, reset=False)
     print(response_2)
-    # Comment: (fill in after running) tool use, code generation, or both?
+    # Comment: Code generation only. No tool was called. None of my four tools compare
+    # years or group by region. The agent filtered the data to 2015 and 2024, took the
+    # mean score per region for each year, subtracted them, and used idxmax() to find
+    # the largest increase: Central and Eastern Europe, about +0.66.
 
 
 # --- Reflection ---
