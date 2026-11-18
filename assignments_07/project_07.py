@@ -184,7 +184,8 @@ if __name__ == "__main__":
         response = agent.run(query, reset=False)
         print(response)
 
-       my_query_1 = "Which 3 countries had the highest average happiness_score across all years?"
+    # Task 4: your own questions
+    my_query_1 = "Which 3 countries had the highest average happiness_score across all years?"
     response_1 = agent.run(my_query_1, reset=False)
     print(response_1)
     # Comment: Code generation only. No tool was called. get_top_n_countries ranks
