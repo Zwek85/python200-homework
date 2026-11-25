@@ -47,7 +47,7 @@ When you have a large, steady, predictable workload that runs constantly. In tha
 - **Google Cloud Platform (GCP):** Strength in data analytics, machine learning, and Kubernetes. Used by data-heavy and AI-focused organizations.
 
 # Q2: Why the course switched from Azure to Supabase**
-I don't have the lesson text, so these are my best guesses at the three reasons. Please check them against the lesson and swap in its wording.
+
 1. **Complexity:** Azure has a steep learning curve and a lot of setup (accounts, subscriptions, resource groups) before you can do anything useful.
 2. **Cost and access:** Azure can require billing setup and can cost money, while Supabase has a free tier that's easy for students to use.
 3. **Fit for the course:** Supabase gives you a ready-to-use Postgres database and API, which matches what a data course actually needs.
